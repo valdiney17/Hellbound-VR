@@ -273,8 +273,8 @@ function loadShotgunModel() {
                 const size = bbox.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
 
-                // Shotgun real ~= 1.0m. Escalar para 0.75m
-                const targetSize = 0.75;
+                // Shotgun real ~= 1.0m. Escalar para 0.90m (0.75 + 0.15)
+                const targetSize = 0.90;
                 const scaleFactor = targetSize / maxDim;
                 model.scale.setScalar(scaleFactor);
 
@@ -283,7 +283,7 @@ function loadShotgunModel() {
                 model.position.set(-center.x, -center.y, -center.z);
 
                 // Rotacao: cano para frente (-Z)
-                model.rotation.set(0, Math.PI, 0);
+                model.rotation.set(0, -Math.PI / 2, 0);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
@@ -329,7 +329,7 @@ function loadSMGModel() {
                 const center = scaledBox.getCenter(new THREE.Vector3());
                 model.position.set(-center.x, -center.y, -center.z);
 
-                model.rotation.set(0, Math.PI, 0);
+                model.rotation.set(0, -Math.PI / 2, 0);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
