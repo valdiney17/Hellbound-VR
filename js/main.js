@@ -744,11 +744,11 @@ function playSound(type) {
                 const src = audioCtx.createBufferSource();
                 src.buffer = pistolBuffer;
                 const g = audioCtx.createGain();
-                g.gain.value = 0.5;
+                g.gain.value = 1.0;
                 src.connect(g).connect(audioCtx.destination);
                 src.start();
             } else {
-                playGunshot(800, 0.08, 0.25);
+                playGunshot(800, 0.08, 0.5);
             }
             break;
         case 'smg':
@@ -758,11 +758,11 @@ function playSound(type) {
                 smgFireSource.buffer = smgFireBuffer;
                 smgFireSource.loop = true;
                 const g = audioCtx.createGain();
-                g.gain.value = 0.4;
+                g.gain.value = 1.0;
                 smgFireSource.connect(g).connect(audioCtx.destination);
                 smgFireSource.start();
             } else {
-                playGunshot(1200, 0.05, 0.15);
+                playGunshot(1200, 0.05, 0.3);
             }
             break;
         case 'shotgun':
@@ -770,7 +770,7 @@ function playSound(type) {
                 const src = audioCtx.createBufferSource();
                 src.buffer = shotgunFireBuffer;
                 const g = audioCtx.createGain();
-                g.gain.value = 0.5;
+                g.gain.value = 1.0;
                 src.connect(g).connect(audioCtx.destination);
                 src.start();
             } else {
@@ -1674,14 +1674,14 @@ function reload() {
         const src = audioCtx.createBufferSource();
         src.buffer = smgReloadBuffer;
         const g = audioCtx.createGain();
-        g.gain.value = 0.4;
+        g.gain.value = 1.0;
         src.connect(g).connect(audioCtx.destination);
         src.start();
     } else if (currentWeapon === 'shotgun' && shotgunReloadBuffer && audioCtx) {
         const src = audioCtx.createBufferSource();
         src.buffer = shotgunReloadBuffer;
         const g = audioCtx.createGain();
-        g.gain.value = 0.4;
+        g.gain.value = 1.0;
         src.connect(g).connect(audioCtx.destination);
         src.start();
     } else {
@@ -1967,7 +1967,7 @@ function animate() {
             const src = audioCtx.createBufferSource();
             src.buffer = smgEndBuffer;
             const g = audioCtx.createGain();
-            g.gain.value = 0.3;
+            g.gain.value = 1.0;
             src.connect(g).connect(audioCtx.destination);
             src.start();
         }
@@ -1980,7 +1980,7 @@ function animate() {
             const src = audioCtx.createBufferSource();
             src.buffer = smgEndBuffer;
             const g = audioCtx.createGain();
-            g.gain.value = 0.3;
+            g.gain.value = 1.0;
             src.connect(g).connect(audioCtx.destination);
             src.start();
         }
