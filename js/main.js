@@ -1029,21 +1029,20 @@ function pollXRGamepad() {
         const sources = session.inputSources;
         for (let i = 0; i < sources.length; i++) {
             const src = sources[i];
-            if (src.gamepad) {
-                // Thumbstick esquerdo para movimento
-                if (src.handedness === 'left' && src.gamepad.axes.length >= 2) {
-                    vrMoveAxes = [src.gamepad.axes[0] || 0, src.gamepad.axes[1] || 0];
+            if (!src.gamepad) continue;
+            // Thumbstick esquerdo para movimento
+            if (src.handedness === 'left' && src.gamepad.axes.length >= 2) {
+                vrMoveAxes = [src.gamepad.axes[0] || 0, src.gamepad.axes[1] || 0];
+            }
+            // Botao A/X (indice 3) no controller esquerdo para trocar arma
+            if (src.handedness === 'left' && src.gamepad.buttons.length > 3) {
+                const btnPressed = src.gamepad.buttons[3].pressed;
+                if (btnPressed && !_lastVRWeaponBtn) {
+                    const keys = Object.keys(WEAPONS);
+                    const idx = keys.indexOf(currentWeapon);
+                    switchWeapon(keys[(idx + 1) % keys.length]);
                 }
-                // Botão A/X (índice 3) no controller esquerdo para trocar arma
-                if (src.handedness === 'left' && src.gamepad.buttons.length > 3) {
-                    const btnPressed = src.gamepad.buttons[3].pressed;
-                    if (btnPressed && !_lastVRWeaponBtn) {
-                        const keys = Object.keys(WEAPONS);
-                        const idx = keys.indexOf(currentWeapon);
-                        switchWeapon(keys[(idx + 1) % keys.length]);
-                    }
-                    _lastVRWeaponBtn = btnPressed;
-                }
+                _lastVRWeaponBtn = btnPressed;
             }
         }
     } catch (e) {}
