@@ -260,7 +260,7 @@ function loadShotgunModel() {
     try {
         const loader = new GLTFLoader();
         loader.load(
-            'assets/audio/arma/Shotgun/benelli_m4.glb',
+            'assets/audio/arma/Shotgun/benelli_m4/scene.gltf',
             (gltf) => {
                 const model = gltf.scene;
                 shotgunModel = model;

@@ -9,6 +9,9 @@ package-lock.json
 *.3ds
 *.x3d
 *.ply
+*.glb
+*.zip
+*.usdz
 # Large model files
 assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Tree1.obj
 assets/cenario/maos/uploads_files_3670422_handbynadevaynoskix(1).obj
