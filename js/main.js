@@ -23,7 +23,7 @@ const WEAPONS = {
     knife: { name: 'Faca', ammo: 999, maxAmmo: 999, damage: 50, fireRate: 400, reloadTime: 0, spread: 0, bulletsPerShot: 0, color: 0xcccccc, melee: true, range: 2.0 },
     pistol: { name: 'Pistola', ammo: 12, maxAmmo: 12, damage: 25, fireRate: 300, reloadTime: 1500, spread: 0.02, bulletsPerShot: 1, color: 0x00ff88 },
     smg: { name: 'SMG', ammo: 30, maxAmmo: 30, damage: 15, fireRate: 80, reloadTime: 2000, spread: 0.08, bulletsPerShot: 1, color: 0x00aaff },
-    shotgun: { name: 'Shotgun', ammo: 8, maxAmmo: 8, damage: 40, fireRate: 800, reloadTime: 2500, spread: 0.15, bulletsPerShot: 6, color: 0xff8800 },
+    shotgun: { name: 'Shotgun', ammo: 4, maxAmmo: 4, damage: 40, fireRate: 800, reloadTime: 2500, spread: 0.15, bulletsPerShot: 6, color: 0xff8800 },
     sniper: { name: 'Sniper', ammo: 5, maxAmmo: 5, damage: 100, fireRate: 1500, reloadTime: 3000, spread: 0.005, bulletsPerShot: 1, color: 0xff0044 }
 };
 
@@ -377,7 +377,7 @@ function loadKnifeModel() {
                 model.position.set(-center.x, -center.y, -center.z);
 
                 // Faca: ponta para cima (+Y), cabo na mao
-                model.rotation.set(0, Math.PI, -Math.PI / 2);
+                model.rotation.set(0, Math.PI, Math.PI / 2);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
@@ -1166,7 +1166,6 @@ function setupControllers() {
 
     // Controller 1 = DIREITO (arma/tiro)
     controller2 = renderer.xr.getController(1);
-    controller2.addEventListener('selectstart', () => shoot());
     controller2.addEventListener('squeezestart', () => reload());
     scene.add(controller2);
 
@@ -1190,6 +1189,9 @@ function setupControllers() {
 
 // Poll gamepad diretamente do XR session
 let _lastVRWeaponBtn = false;
+let vrTriggerHeld = false;
+let vrTriggerReleased = true;
+
 function pollXRGamepad() {
     const session = xrSession || renderer.xr.getSession();
     if (!session) return;
@@ -1211,6 +1213,17 @@ function pollXRGamepad() {
                     switchWeapon(keys[(idx + 1) % keys.length]);
                 }
                 _lastVRWeaponBtn = btnPressed;
+            }
+            // Trigger direito para tiro continuo (auto-fire)
+            if (src.handedness === 'right' && src.gamepad.buttons.length > 0) {
+                const triggerPressed = src.gamepad.buttons[0].pressed;
+                if (triggerPressed) {
+                    vrTriggerHeld = true;
+                    vrTriggerReleased = false;
+                } else {
+                    vrTriggerHeld = false;
+                    vrTriggerReleased = true;
+                }
             }
         }
     } catch (e) {}
@@ -1861,6 +1874,11 @@ function animate() {
 
     // Poll gamepad do Quest 2 (thumbstick esquerdo)
     if (isVR) pollXRGamepad();
+
+    // Auto-fire: se gatilho VR segurado, dispara continuamente (fire rate controlado dentro de shoot)
+    if (isVR && vrTriggerHeld) {
+        shoot();
+    }
 
     isWalking = moveForward || moveBackward || moveLeft || moveRight;
 
