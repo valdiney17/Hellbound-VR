@@ -39,6 +39,8 @@ let smgFireBuffer = null;
 let smgEndBuffer = null;
 let smgReloadBuffer = null;
 let smgFireSource = null;
+let shotgunFireBuffer = null;
+let shotgunReloadBuffer = null;
 let campfires = [];
 let weaponModel = null;
 let shotgunModel = null;
@@ -592,6 +594,17 @@ function ensureAudio() {
         .then(buf => audioCtx.decodeAudioData(buf))
         .then(decoded => { smgReloadBuffer = decoded; console.log('SMG reload loaded OK'); })
         .catch(e => console.warn('SMG reload load failed:', e.message));
+    // Carregar sons da Shotgun
+    fetch('assets/audio/arma/Shotgun/tiro shotgun bala.mp3')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => { shotgunFireBuffer = decoded; console.log('Shotgun fire loaded OK'); })
+        .catch(e => console.warn('Shotgun fire load failed:', e.message));
+    fetch('assets/audio/arma/Shotgun/shotgun recarga.mp3')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => { shotgunReloadBuffer = decoded; console.log('Shotgun reload loaded OK'); })
+        .catch(e => console.warn('Shotgun reload load failed:', e.message));
     // Musica do menu
     startMenuMusic();
 }
@@ -752,7 +765,18 @@ function playSound(type) {
                 playGunshot(1200, 0.05, 0.15);
             }
             break;
-        case 'shotgun': playGunshot(300, 0.15, 0.4); break;
+        case 'shotgun':
+            if (shotgunFireBuffer) {
+                const src = audioCtx.createBufferSource();
+                src.buffer = shotgunFireBuffer;
+                const g = audioCtx.createGain();
+                g.gain.value = 0.5;
+                src.connect(g).connect(audioCtx.destination);
+                src.start();
+            } else {
+                playGunshot(300, 0.15, 0.4);
+            }
+            break;
         case 'sniper': playGunshot(150, 0.2, 0.5); break;
         case 'hit': playHitSound(); break;
         case 'kill': playKillSound(); break;
@@ -1645,10 +1669,17 @@ function reload() {
         try { smgFireSource.stop(); } catch(e) {}
         smgFireSource = null;
     }
-    // Tocar som de recarga da SMG ou som generico
+    // Tocar som de recarga especifico da arma ou som generico
     if (currentWeapon === 'smg' && smgReloadBuffer && audioCtx) {
         const src = audioCtx.createBufferSource();
         src.buffer = smgReloadBuffer;
+        const g = audioCtx.createGain();
+        g.gain.value = 0.4;
+        src.connect(g).connect(audioCtx.destination);
+        src.start();
+    } else if (currentWeapon === 'shotgun' && shotgunReloadBuffer && audioCtx) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = shotgunReloadBuffer;
         const g = audioCtx.createGain();
         g.gain.value = 0.4;
         src.connect(g).connect(audioCtx.destination);
