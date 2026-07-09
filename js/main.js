@@ -1724,8 +1724,18 @@ function animate() {
         const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
 
         const moveSpeed = 3.5;
-        // VR: movimento e feito fisicamente (room-scale), nao pelo analogico
-        isWalking = false;
+        const moved = Math.abs(vrMoveAxes[0]) > deadzone || Math.abs(vrMoveAxes[1]) > deadzone;
+        if (moved) {
+            if (Math.abs(vrMoveAxes[1]) > deadzone) {
+                cameraRig.position.addScaledVector(fwd, -vrMoveAxes[1] * moveSpeed * delta);
+            }
+            if (Math.abs(vrMoveAxes[0]) > deadzone) {
+                cameraRig.position.addScaledVector(right, vrMoveAxes[0] * moveSpeed * delta);
+            }
+            isWalking = true;
+        } else {
+            isWalking = false;
+        }
 
         if (isWalking) {
             footstepTimer += delta;
