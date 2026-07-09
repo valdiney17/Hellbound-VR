@@ -2,6 +2,23 @@
 
 Jogo de tiro em primeira pessoa (FPS) com suporte a realidade virtual, otimizado para Meta Quest 2 via browser. Tema de terror com menu atmosferico, musica dinamica e gameplay completa.
 
+**Versao atual: v1.0.1**
+
+---
+
+## Changelog
+
+### v1.0.1 (2026-07-09)
+- **Nova arma: Faca** (corpo a corpo, dano 50, alcance 2m, municao infinita)
+- **Texturas de arvores reais**: Troncos com BarkDecidious, copas com Leaves0120
+- **Flash corrigido**: Offset (-0.03 left, +0.04 up) para alinhar com cano
+- **Luz verde removida**: PointLight(0x00ff88) removida da arma
+- **VR weapon switch**: Botao A/X no controller esquerdo troca entre armas
+- **Muzzle flash dinamico**: Usa matrix do controller (VR) ou camera (desktop)
+
+### v1.0.0 (2026-07-08)
+- Release inicial
+
 ---
 
 ## 1. Pre-requisitos
@@ -357,12 +374,21 @@ Pagina carrega
 
 ## 8. Armas
 
-| Arma | Municao | Dano | Cadencia | Recarga | Spread | Balas/Shot |
-|---|---|---|---|---|---|---|
-| Pistola | **12** | 25 | 300ms | 1.5s | 0.02 | 1 |
-| SMG | 30 | 15 | 80ms | 2.0s | 0.08 | 1 |
-| Shotgun | 8 | 40 | 800ms | 2.5s | 0.15 | 6 |
-| Sniper | 5 | 100 | 1500ms | 3.0s | 0.005 | 1 |
+| Arma | Municao | Dano | Cadencia | Recarga | Spread | Balas/Shot | Tipo |
+|---|---|---|---|---|---|---|---|
+| **Faca** | **∞** | 50 | 400ms | - | - | - | Corpo a corpo |
+| Pistola | **12** | 25 | 300ms | 1.5s | 0.02 | 1 | Projetil |
+| SMG | 30 | 15 | 80ms | 2.0s | 0.08 | 1 | Projetil |
+| Shotgun | 8 | 40 | 800ms | 2.5s | 0.15 | 6 | Projetil |
+| Sniper | 5 | 100 | 1500ms | 3.0s | 0.005 | 1 | Projetil |
+
+### Faca (melee)
+
+- **Dano**: 50 (2x pistola)
+- **Alcance**: 2m (raycast)
+- **Efeito visual**: Swing animado + anel de corte branco
+- **VR**: Botao A/X (index 3) no controller esquerdo troca arma
+- **Desktop**: Tecla `0`
 
 ### Modelo FBX da pistola
 
@@ -431,6 +457,7 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 | Direito (`getController(1)`) | Arma + tiro | `selectstart` → `shoot()` |
 | Direito (`getController(1)`) | Recarga | `squeezestart` → `reload()` |
 | Esquerdo (`getController(0)`) | Movimento | Polling `gamepad.axes` via `pollXRGamepad()` |
+| Esquerdo (`getController(0)`) | Trocar arma | Botao A/X (index 3) → `switchWeapon()` |
 
 ### Arma em VR
 
@@ -469,6 +496,18 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 ---
 
 ## 12. Correcoes Realizadas
+
+### v1.0.1
+| Correcao | Descricao |
+|---|---|
+| Faca melee | Nova arma corpo a corpo com swing animado |
+| Arvores texturizadas | Copas com Leaves0120, troncos com BarkDecidious |
+| Flash offset | Offset (-0.03, 0.04, 0) para alinhar com cano |
+| Luz verde removida | PointLight(0x00ff88) removida da arma |
+| VR weapon switch | Botao A/X no controller esquerdo troca armas |
+| Flash dinamico | Usa matrix correta (controller VR / camera desktop) |
+
+### v1.0.0
 
 | Correcao | Descricao |
 |---|---|
@@ -534,8 +573,9 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 |---|---|---|
 | Olhar | Tracking de cabeca | - |
 | Andar | Esquerdo | Thumbstick |
-| Atirar | Direito | Trigger |
+| Atirar/Cortar | Direito | Trigger |
 | Recarregar | Direito | Grip |
+| Trocar arma | Esquerdo | A/X (index 3) |
 
 ### Desktop
 
@@ -543,9 +583,9 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 |---|---|
 | Mover | W A S D |
 | Olhar | Mouse |
-| Atirar | Click esquerdo |
+| Atirar/Cortar | Click esquerdo |
 | Recarregar | R |
-| Trocar arma | Scroll / 1 2 3 4 |
+| Trocar arma | Scroll / 0 1 2 3 4 |
 
 ---
 

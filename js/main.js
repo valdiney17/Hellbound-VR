@@ -19,6 +19,7 @@ let vrMoveAxes = [0, 0];
 let leftHandModel = null;
 
 const WEAPONS = {
+    knife: { name: 'Faca', ammo: 999, maxAmmo: 999, damage: 50, fireRate: 400, reloadTime: 0, spread: 0, bulletsPerShot: 0, color: 0xcccccc, melee: true, range: 2.0 },
     pistol: { name: 'Pistola', ammo: 12, maxAmmo: 12, damage: 25, fireRate: 300, reloadTime: 1500, spread: 0.02, bulletsPerShot: 1, color: 0x00ff88 },
     smg: { name: 'SMG', ammo: 30, maxAmmo: 30, damage: 15, fireRate: 80, reloadTime: 2000, spread: 0.08, bulletsPerShot: 1, color: 0x00aaff },
     shotgun: { name: 'Shotgun', ammo: 8, maxAmmo: 8, damage: 40, fireRate: 800, reloadTime: 2500, spread: 0.15, bulletsPerShot: 6, color: 0xff8800 },
@@ -238,10 +239,6 @@ function loadWeaponModel() {
                     }
                 });
 
-                const gunLight = new THREE.PointLight(0x00ff88, 0.5, 1);
-                gunLight.position.set(0, 0, -0.1);
-                model.add(gunLight);
-
                 // Adicionar ao controller2 (mesmo lugar onde saem balas)
                 controller2.add(model);
                 console.log('Pistol FBX loaded! Model size:', size, 'Scale:', scaleFactor);
@@ -315,7 +312,18 @@ function createFallbackWeapons() {
         const accentMat = new THREE.MeshStandardMaterial({ color: w.color, emissive: w.color, emissiveIntensity: 0.3 });
         const gripMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 });
 
-        if (key === 'pistol') {
+        if (key === 'knife') {
+            // Lâmina
+            addPart(gunGroup, new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.1 }), 'box', [0.005, 0.015, 0.22, 0, 0, 0.12]);
+            // Borda da lâmina (triângulo aproximado)
+            addPart(gunGroup, new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.1 }), 'box', [0.003, 0.01, 0.18, 0, 0.008, 0.13, 0, 0, 0.15]);
+            // Guard (proteção entre lâmina e cabo)
+            addPart(gunGroup, new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 }), 'box', [0.025, 0.012, 0.015, 0, 0, 0.02]);
+            // Cabo (cabo de faca)
+            addPart(gunGroup, new THREE.MeshStandardMaterial({ color: 0x3a2010, roughness: 0.8 }), 'cyl', [0.008, 0.1, 0, 0, -0.04, Math.PI / 2, 0, 0]);
+            // Rebite do cabo
+            addPart(gunGroup, new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8 }), 'cyl', [0.005, 0.012, 0, 0, -0.09, Math.PI / 2, 0, 0]);
+        } else if (key === 'pistol') {
             addPart(gunGroup, bodyMat, 'box', [0.04, 0.06, 0.25]);
             addPart(gunGroup, bodyMat, 'cyl', [0.012, 0.2, 0, 0, -0.22, Math.PI / 2, 0, 0]);
             addPart(gunGroup, gripMat, 'box', [0.035, 0.1, 0.05, 0, -0.08, 0.03, 0.3, 0, 0]);
@@ -681,18 +689,37 @@ function createForest() {
     const p2 = new THREE.Mesh(new THREE.PlaneGeometry(100, 3.5), pathMat);
     p2.rotation.x = -Math.PI / 2; p2.position.y = 0.01; scene.add(p2);
 
+    // Carregar texturas de arvore
+    const textureLoader = new THREE.TextureLoader();
+    const leafTextures = [
+        textureLoader.load('assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Leaves0120_35_S.png'),
+        textureLoader.load('assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Leaves0142_4_S.png'),
+        textureLoader.load('assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Leaves0156_1_S.png'),
+    ];
+    leafTextures.forEach(t => { t.colorSpace = THREE.SRGBColorSpace; t.transparent = true; t.alphaTest = 0.3; });
+
+    const barkTex = textureLoader.load('assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/BarkDecidious0143_5_S.jpg');
+    barkTex.colorSpace = THREE.SRGBColorSpace;
+
     // InstancedMesh para troncos (uma draw call para todas as 70 arvores)
     const TRUNK_COUNT = 70;
     const trunkGeo = new THREE.CylinderGeometry(0.15, 0.22, 4, 6);
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2815, roughness: 0.9 });
+    const trunkMat = new THREE.MeshStandardMaterial({ map: barkTex, roughness: 0.9 });
     const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, TRUNK_COUNT);
     trunkMesh.castShadow = true;
     trunkMesh.receiveShadow = true;
 
-    // InstancedMesh para copas (2-3 esferas por arvore ~200 total)
+    // InstancedMesh para copas com textura real de folhas
     const FOLIAGE_COUNT = 200;
-    const foliageGeo = new THREE.SphereGeometry(1.5, 6, 5);
-    const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1a, roughness: 0.85 });
+    const foliageGeo = new THREE.SphereGeometry(1.5, 8, 6);
+    const foliageMat = new THREE.MeshStandardMaterial({
+        map: leafTextures[0],
+        alphaMap: leafTextures[0],
+        alphaTest: 0.3,
+        transparent: true,
+        roughness: 0.8,
+        side: THREE.DoubleSide
+    });
     const foliageMesh = new THREE.InstancedMesh(foliageGeo, foliageMat, FOLIAGE_COUNT);
     foliageMesh.castShadow = true;
 
@@ -952,6 +979,7 @@ function setupControllers() {
 }
 
 // Poll gamepad diretamente do XR session
+let _lastVRWeaponBtn = false;
 function pollXRGamepad() {
     const session = xrSession || renderer.xr.getSession();
     if (!session) return;
@@ -959,19 +987,24 @@ function pollXRGamepad() {
         const sources = session.inputSources;
         for (let i = 0; i < sources.length; i++) {
             const src = sources[i];
-            if (src.gamepad && src.gamepad.axes.length >= 2) {
-                const axes = src.gamepad.axes;
-                // Log uma vez para debug
-                if (!pollXRGamepad._logged) {
-                    console.log('Gamepad found:', src.handedness, 'axes:', axes.length, 'values:', axes[0], axes[1]);
-                    pollXRGamepad._logged = true;
+            if (src.gamepad) {
+                // Thumbstick esquerdo para movimento
+                if (src.handedness === 'left' && src.gamepad.axes.length >= 2) {
+                    vrMoveAxes = [src.gamepad.axes[0] || 0, src.gamepad.axes[1] || 0];
                 }
-                vrMoveAxes = [axes[0] || 0, axes[1] || 0];
-                return;
+                // Botão A/X (índice 3) no controller esquerdo para trocar arma
+                if (src.handedness === 'left' && src.gamepad.buttons.length > 3) {
+                    const btnPressed = src.gamepad.buttons[3].pressed;
+                    if (btnPressed && !_lastVRWeaponBtn) {
+                        const keys = Object.keys(WEAPONS);
+                        const idx = keys.indexOf(currentWeapon);
+                        switchWeapon(keys[(idx + 1) % keys.length]);
+                    }
+                    _lastVRWeaponBtn = btnPressed;
+                }
             }
         }
     } catch (e) {}
-    vrMoveAxes = [0, 0];
 }
 
 // ==================== VR ====================
@@ -1106,7 +1139,8 @@ function setupKeyboard() {
             case 'KeyD': moveRight = true; break;
             case 'Space': shoot(); break;
             case 'KeyR': reload(); break;
-            case 'Digit1': switchWeapon('pistol'); break;
+            case 'Digit0': switchWeapon('knife'); break;
+        case 'Digit1': switchWeapon('pistol'); break;
             case 'Digit2': switchWeapon('smg'); break;
             case 'Digit3': switchWeapon('shotgun'); break;
             case 'Digit4': switchWeapon('sniper'); break;
@@ -1159,24 +1193,64 @@ function shoot() {
     if (weaponAmmo[currentWeapon] <= 0) { playSound('empty'); return; }
     if (now - lastFireTime < w.fireRate) return;
     lastFireTime = now;
-    weaponAmmo[currentWeapon]--;
+    if (!w.melee) weaponAmmo[currentWeapon]--;
     updateAmmoDisplay();
     playSound(currentWeapon);
 
-    // Recoil na arma (VR) - kick para frente (muzzle climb)
-    if (isVR && weaponModel) {
-        weaponModel.position.z -= 0.03;
-        setTimeout(() => { if (weaponModel) weaponModel.position.z += 0.03; }, 40);
+    // ANIMAÇÃO DA FACA - swing na VR
+    if (w.melee && isVR && weaponModel) {
+        const origRot = weaponModel.rotation.x;
+        weaponModel.rotation.x -= 0.5;
+        setTimeout(() => { if (weaponModel) weaponModel.rotation.x = origRot; }, 100);
     }
 
+    // ATAQUE CORPO A CORPO (faca)
+    if (w.melee) {
+        const tempMatrix = new THREE.Matrix4();
+        let origin, direction;
+        if (isVR && controller2) {
+            tempMatrix.identity().extractRotation(controller2.matrixWorld);
+            origin = new THREE.Vector3().setFromMatrixPosition(controller2.matrixWorld);
+            direction = new THREE.Vector3(0, 0, -1).applyMatrix4(tempMatrix);
+        } else {
+            tempMatrix.identity().extractRotation(camera.matrixWorld);
+            origin = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+            direction = new THREE.Vector3(0, 0, -1).applyMatrix4(tempMatrix);
+        }
+
+        // Raio de ataque corpo a corpo (2m)
+        raycaster.ray.origin.copy(origin);
+        raycaster.ray.direction.copy(direction);
+        raycaster.far = w.range;
+
+        const intersects = raycaster.intersectObjects(enemies, true);
+        raycaster.far = Infinity;
+        if (intersects.length > 0) {
+            let obj = intersects[0].object;
+            while (obj.parent && !obj.userData.type) obj = obj.parent;
+            if (obj.userData.type) hitEnemy(obj, w.damage);
+        }
+
+        // Efeito visual do swing
+        const slashEffect = new THREE.Mesh(
+            new THREE.RingGeometry(0.3, 0.5, 8, 1, 0, Math.PI * 0.6),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+        );
+        slashEffect.position.copy(origin).add(direction.clone().multiplyScalar(0.5));
+        slashEffect.lookAt(origin);
+        scene.add(slashEffect);
+        setTimeout(() => scene.remove(slashEffect), 100);
+
+        return;
+    }
+
+    // TIRO COM BALA (armas de fogo)
     for (let i = 0; i < w.bulletsPerShot; i++) {
         const tempMatrix = new THREE.Matrix4();
         if (isVR && controller2) {
-            // Arma dispara da mão direita
             tempMatrix.identity().extractRotation(controller2.matrixWorld);
             raycaster.ray.origin.setFromMatrixPosition(controller2.matrixWorld);
             raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-            // Offset do cano em relação ao centro do controller
             const barrelOffset = new THREE.Vector3(-0.03, 0, -0.12);
             barrelOffset.applyMatrix4(tempMatrix);
             raycaster.ray.origin.add(barrelOffset);
@@ -1196,7 +1270,8 @@ function shoot() {
         scene.add(bullet);
 
         const flash = new THREE.Mesh(new THREE.SphereGeometry(0.06, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffaa, transparent: true, opacity: 0.9 }));
-        flash.position.copy(raycaster.ray.origin).add(raycaster.ray.direction.clone().multiplyScalar(0.2));
+        const flashOffset = new THREE.Vector3(-0.03, 0.04, 0).applyMatrix4(tempMatrix);
+        flash.position.copy(raycaster.ray.origin).add(raycaster.ray.direction.clone().multiplyScalar(0.2)).add(flashOffset);
         scene.add(flash);
         const fLight = new THREE.PointLight(0xffffaa, 2, 5);
         fLight.position.copy(flash.position);
@@ -1302,7 +1377,11 @@ function reload() {
 
 function updateAmmoDisplay() {
     const w = WEAPONS[currentWeapon];
-    document.getElementById('ammo').textContent = `${weaponAmmo[currentWeapon]} / ${w.maxAmmo}`;
+    if (w.melee) {
+        document.getElementById('ammo').textContent = `∞`;
+    } else {
+        document.getElementById('ammo').textContent = `${weaponAmmo[currentWeapon]} / ${w.maxAmmo}`;
+    }
     document.getElementById('weapon-name').textContent = w.name;
     document.getElementById('enemy-total').textContent = enemies.filter(e => e.userData.alive).length;
 }
