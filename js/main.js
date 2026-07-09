@@ -38,6 +38,8 @@ let pistolBuffer = null;
 let campfires = [];
 let weaponModel = null;
 let shotgunModel = null;
+let smgModel = null;
+let knifeModel = null;
 
 init();
 
@@ -99,6 +101,8 @@ function init() {
     try {
         loadWeaponModel();
         loadShotgunModel();
+        loadSMGModel();
+        loadKnifeModel();
     } catch (e) {
         console.error('Weapons error:', e);
     }
@@ -269,8 +273,55 @@ function loadShotgunModel() {
                 const size = bbox.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
 
-                // Shotgun real ~= 0.7m
-                const targetSize = 0.50;
+                // Shotgun real ~= 1.0m. Escalar para 0.75m
+                const targetSize = 0.75;
+                const scaleFactor = targetSize / maxDim;
+                model.scale.setScalar(scaleFactor);
+
+                const scaledBox = new THREE.Box3().setFromObject(model);
+                const center = scaledBox.getCenter(new THREE.Vector3());
+                model.position.set(-center.x, -center.y, -center.z);
+
+                // Rotacao: cano para frente (-Z)
+                model.rotation.set(0, Math.PI, 0);
+                model.position.set(0, 0, 0);
+
+                model.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                controller2.add(model);
+                model.visible = false;
+                console.log('Shotgun GLTF loaded! Scale:', scaleFactor);
+            },
+            undefined,
+            (err) => {
+                console.log('Shotgun GLTF load error:', err);
+            }
+        );
+    } catch (e) {
+        console.log('GLTFLoader error:', e);
+    }
+}
+
+function loadSMGModel() {
+    try {
+        const loader = new GLTFLoader();
+        loader.load(
+            'assets/audio/arma/smg/low-poly_msmc.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                smgModel = model;
+
+                const bbox = new THREE.Box3().setFromObject(model);
+                const size = bbox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+
+                // SMG real ~= 0.45m
+                const targetSize = 0.45;
                 const scaleFactor = targetSize / maxDim;
                 model.scale.setScalar(scaleFactor);
 
@@ -290,11 +341,57 @@ function loadShotgunModel() {
 
                 controller2.add(model);
                 model.visible = false;
-                console.log('Shotgun GLB loaded! Scale:', scaleFactor);
+                console.log('SMG GLB loaded! Scale:', scaleFactor);
             },
             undefined,
             (err) => {
-                console.log('Shotgun GLB load error:', err);
+                console.log('SMG GLB load error:', err);
+            }
+        );
+    } catch (e) {
+        console.log('GLTFLoader error:', e);
+    }
+}
+
+function loadKnifeModel() {
+    try {
+        const loader = new GLTFLoader();
+        loader.load(
+            'assets/audio/arma/faca/combat_knife.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                knifeModel = model;
+
+                const bbox = new THREE.Box3().setFromObject(model);
+                const size = bbox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+
+                // Faca real ~= 0.30m
+                const targetSize = 0.30;
+                const scaleFactor = targetSize / maxDim;
+                model.scale.setScalar(scaleFactor);
+
+                const scaledBox = new THREE.Box3().setFromObject(model);
+                const center = scaledBox.getCenter(new THREE.Vector3());
+                model.position.set(-center.x, -center.y, -center.z);
+
+                model.rotation.set(0, Math.PI, 0);
+                model.position.set(0, 0, 0);
+
+                model.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                controller2.add(model);
+                model.visible = false;
+                console.log('Knife GLB loaded! Scale:', scaleFactor);
+            },
+            undefined,
+            (err) => {
+                console.log('Knife GLB load error:', err);
             }
         );
     } catch (e) {
@@ -433,11 +530,20 @@ function switchWeapon(name) {
 
     // Trocar modelo 3D no VR
     if (isVR) {
+        // Esconder todos modelos 3D
+        if (weaponModel) weaponModel.visible = false;
+        if (shotgunModel) shotgunModel.visible = false;
+        if (smgModel) smgModel.visible = false;
+        if (knifeModel) knifeModel.visible = false;
+
+        // Mostrar modelo correto
         if (name === 'shotgun' && shotgunModel) {
-            if (weaponModel) weaponModel.visible = false;
             shotgunModel.visible = true;
+        } else if (name === 'smg' && smgModel) {
+            smgModel.visible = true;
+        } else if (name === 'knife' && knifeModel) {
+            knifeModel.visible = true;
         } else if (weaponModel) {
-            shotgunModel.visible = false;
             weaponModel.visible = true;
         }
     }
@@ -1806,12 +1912,19 @@ function animate() {
     if (isVR) {
         // Esconder fallback guns em VR
         Object.values(guns).forEach(g => { g.visible = false; });
+        // Esconder todos modelos 3D
+        if (weaponModel) weaponModel.visible = false;
+        if (shotgunModel) shotgunModel.visible = false;
+        if (smgModel) smgModel.visible = false;
+        if (knifeModel) knifeModel.visible = false;
         // Mostrar modelo correto baseado na arma selecionada
         if (currentWeapon === 'shotgun' && shotgunModel) {
-            if (weaponModel) weaponModel.visible = false;
             shotgunModel.visible = true;
+        } else if (currentWeapon === 'smg' && smgModel) {
+            smgModel.visible = true;
+        } else if (currentWeapon === 'knife' && knifeModel) {
+            knifeModel.visible = true;
         } else if (weaponModel) {
-            if (shotgunModel) shotgunModel.visible = false;
             weaponModel.visible = true;
         }
         // Esconder laser pointers

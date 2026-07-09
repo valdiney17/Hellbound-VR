@@ -9,13 +9,16 @@ package-lock.json
 *.3ds
 *.x3d
 *.ply
-*.glb
-*.zip
-*.usdz
-*.fbx
-*.obj
-assets/audio/arma/Shotgun/
-assets/audio/arma/smg/
-assets/audio/arma/faca/
+# Large files only
+assets/audio/arma/Shotgun/benelli_m4.glb
+assets/audio/arma/Shotgun/benelli_m4 (1).glb
+assets/audio/arma/Shotgun/*.zip
+assets/audio/arma/Shotgun/Benelli_M4.usdz
+assets/audio/arma/Shotgun/benelli-m4/
+assets/audio/arma/Shotgun/benelli_m4/textures/
+assets/audio/arma/smg/*.zip
+assets/audio/arma/smg/*.usdz
+assets/audio/arma/faca/*.zip
+assets/audio/arma/faca/*.usdz
 assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Tree1.obj
 assets/cenario/maos/

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Benelli M4
+* source:	https://sketchfab.com/3d-models/benelli-m4-4bf675e04af949238666d8d2688f49c9
+* author:	BenSloane (https://sketchfab.com/bensloane)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Benelli M4" (https://sketchfab.com/3d-models/benelli-m4-4bf675e04af949238666d8d2688f49c9) by BenSloane (https://sketchfab.com/bensloane) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
