@@ -519,6 +519,16 @@ function startAmbientSounds() {
         setTimeout(playCricket, 1500 + Math.random() * 4000);
     }
     setTimeout(playCricket, 2000);
+
+    // Sons de monstros aleatorios
+    function playMonsterAmbient() {
+        if (!audioCtx || audioCtx.state === 'closed') return;
+        const sounds = ['zombie', 'werewolf', 'ghost'];
+        const sound = sounds[Math.floor(Math.random() * sounds.length)];
+        playSound(sound);
+        setTimeout(playMonsterAmbient, 8000 + Math.random() * 15000);
+    }
+    setTimeout(playMonsterAmbient, 5000);
 }
 
 function playSound(type) {
@@ -549,6 +559,10 @@ function playSound(type) {
         case 'empty': playEmptySound(); break;
         case 'hurt': playHurtSound(); break;
         case 'enemyShoot': playEnemyShootSound(); break;
+        case 'zombie': playZombieSound(); break;
+        case 'werewolf': playWerewolfSound(); break;
+        case 'demon': playDemonSound(); break;
+        case 'ghost': playGhostSound(); break;
         case 'footstep': playFootstep(); break;
         case 'combo': playComboSound(); break;
     }
@@ -629,6 +643,34 @@ function playEnemyShootSound() {
     o.type = 'sawtooth'; o.frequency.setValueAtTime(250, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
     g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
     o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.1);
+}
+
+function playZombieSound() {
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(80, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.3);
+}
+
+function playWerewolfSound() {
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(200, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.25);
+}
+
+function playDemonSound() {
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = 'square'; o.frequency.setValueAtTime(100, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.4);
+    g.gain.setValueAtTime(0.25, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.4);
+}
+
+function playGhostSound() {
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(1200, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.5);
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.5);
 }
 
 function playFootstep() {
@@ -1303,18 +1345,19 @@ function hitEnemy(enemy, damage) {
     if (enemy.userData.health <= 0) {
         enemy.userData.alive = false;
         playSound('kill');
+        playSound(enemy.userData.type); // Sound for monster type
         const now = performance.now();
         if (now - lastKillTime < 3000) combo++; else combo = 1;
         lastKillTime = now;
         kills++;
-        const pts = { boss: 500, heavy: 200, sniper_e: 150, scout: 75, soldier: 100 };
+        const pts = { boss: 500, heavy: 200, sniper_e: 150, scout: 75, soldier: 100, zombie: 120, werewolf: 180, demon: 350, ghost: 100 };
         const earned = (pts[enemy.userData.type] || 100) * combo;
         score += earned;
         document.getElementById('score').textContent = score;
         document.getElementById('combo').textContent = combo > 1 ? `x${combo}` : '';
         document.getElementById('combo').style.opacity = combo > 1 ? '1' : '0';
         document.getElementById('kills').textContent = kills;
-        const names = { soldier: 'Soldado', scout: 'Batedor', heavy: 'Pesado', sniper_e: 'Francotirador', boss: 'Chefe' };
+        const names = { soldier: 'Soldado', scout: 'Batedor', heavy: 'Pesado', sniper_e: 'Francotirador', boss: 'Chefe', zombie: 'Zumbi', werewolf: 'Lobisomem', demon: 'Demo', ghost: 'Fantasma' };
         addKillFeed(`${names[enemy.userData.type] || enemy.userData.type} +${earned}`, '#' + enemy.userData.color.toString(16).padStart(6, '0'));
         spawnParticles(enemy.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xff2200, 25);
         scene.remove(enemy);
@@ -1330,19 +1373,27 @@ function enemyShoot(enemy) {
     dir.x += (Math.random() - 0.5) * 0.12;
     dir.y += (Math.random() - 0.5) * 0.08;
     dir.normalize();
-    const bullet = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff3333 }));
+    
+    // Demon: projeteis de fogo maiores e mais lentos
+    const isDemon = enemy.userData.type === 'demon';
+    const bulletColor = isDemon ? 0xff6600 : 0xff3333;
+    const bulletSize = isDemon ? 0.08 : 0.04;
+    const bulletSpeed = isDemon ? 0.2 : 0.35;
+    const bulletDamage = isDemon ? enemy.userData.damage * 1.5 : enemy.userData.damage;
+    
+    const bullet = new THREE.Mesh(new THREE.SphereGeometry(bulletSize, 6, 6), new THREE.MeshBasicMaterial({ color: bulletColor }));
     const muzzlePos = enemy.position.clone();
     muzzlePos.y += 1.2 * enemy.userData.scale;
     muzzlePos.add(dir.clone().multiplyScalar(0.5));
     bullet.position.copy(muzzlePos);
-    bullet.userData = { velocity: dir.multiplyScalar(0.35), life: 120, damage: enemy.userData.damage };
+    bullet.userData = { velocity: dir.multiplyScalar(bulletSpeed), life: 120, damage: bulletDamage, demon: isDemon };
     enemyBullets.push(bullet);
     scene.add(bullet);
     playSound('enemyShoot');
-    const flash = new THREE.PointLight(0xff4444, 1.5, 4);
+    const flash = new THREE.PointLight(isDemon ? 0xff6600 : 0xff4444, isDemon ? 2.0 : 1.5, isDemon ? 6 : 4);
     flash.position.copy(muzzlePos);
     scene.add(flash);
-    setTimeout(() => scene.remove(flash), 30);
+    setTimeout(() => scene.remove(flash), isDemon ? 50 : 30);
 }
 
 function spawnParticles(pos, color, count) {
@@ -1406,14 +1457,19 @@ function createAllEnemies() {
         { name: 'scout', color: 0x2E5A1C, skin: 0xD2B48C, health: 60, speed: 0.05, damage: 5, count: 3, shootRate: 1500, scale: 0.9 },
         { name: 'heavy', color: 0x333333, skin: 0xC8A882, health: 250, speed: 0.01, damage: 15, count: 2, shootRate: 3000, scale: 1.3 },
         { name: 'sniper_e', color: 0x3a3a2a, skin: 0xD2B48C, health: 80, speed: 0.015, damage: 20, count: 2, shootRate: 2500, scale: 1 },
-        { name: 'boss', color: 0x5a1a1a, skin: 0xBFA07A, health: 600, speed: 0.012, damage: 25, count: 1, shootRate: 1800, scale: 1.5 }
+        { name: 'boss', color: 0x5a1a1a, skin: 0xBFA07A, health: 600, speed: 0.012, damage: 25, count: 1, shootRate: 1800, scale: 1.5 },
+        // MONSTROS
+        { name: 'zombie', color: 0x2a3a1a, skin: 0x556B2F, health: 120, speed: 0.015, damage: 12, count: 5, shootRate: 0, scale: 1.1, monster: true },
+        { name: 'werewolf', color: 0x3a2a1a, skin: 0x8B7355, health: 150, speed: 0.045, damage: 18, count: 3, shootRate: 0, scale: 1.2, monster: true },
+        { name: 'demon', color: 0x4a0a0a, skin: 0x8B0000, health: 300, speed: 0.02, damage: 22, count: 2, shootRate: 2000, scale: 1.4, monster: true },
+        { name: 'ghost', color: 0x1a1a3a, skin: 0x8888cc, health: 80, speed: 0.03, damage: 10, count: 4, shootRate: 1500, scale: 1.0, monster: true, flying: true }
     ];
     types.forEach(type => {
         for (let i = 0; i < type.count; i++) {
-            const enemy = createHumanoidEnemy(type);
+            const enemy = type.monster ? createMonsterEnemy(type) : createHumanoidEnemy(type);
             const angle = Math.random() * Math.PI * 2;
             const radius = 15 + Math.random() * 20;
-            enemy.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+            enemy.position.set(Math.cos(angle) * radius, type.flying ? 1.5 : 0, Math.sin(angle) * radius);
             enemies.push(enemy); scene.add(enemy);
         }
     });
@@ -1471,6 +1527,143 @@ function createHumanoidEnemy(type) {
     g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.125 * s, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat), { position: new THREE.Vector3(0, 1.48 * s, 0) }));
 
     g.userData = { type: type.name, health: type.health, maxHealth: type.health, speed: type.speed, damage: type.damage, shootRate: type.shootRate, lastShot: 0, alive: true, scale: type.scale, color: type.color, walkPhase: Math.random() * Math.PI * 2, stagger: 0 };
+    return g;
+}
+
+function createMonsterEnemy(type) {
+    const g = new THREE.Group(); g.name = type.name;
+    const s = type.scale;
+    const skinMat = new THREE.MeshStandardMaterial({ color: type.skin, roughness: 0.6 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.7 });
+    const eyeMat = new THREE.MeshBasicMaterial({ color: type.name === 'demon' ? 0xff0000 : type.name === 'ghost' ? 0x00ffff : 0xffff00 });
+    const eyePupil = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+    if (type.name === 'zombie') {
+        // Corpo torto e decadente
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.4 * s, 0.6 * s, 0.25 * s), darkMat);
+        torso.position.y = 1.0 * s; torso.rotation.z = 0.1; g.add(torso);
+        // Cabeca torta
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.14 * s, 8, 6), skinMat);
+        head.position.set(0.05 * s, 1.5 * s, 0); head.rotation.z = -0.2; g.add(head);
+        // Olhos brilhantes
+        [-0.04, 0.04].forEach(x => {
+            g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.025 * s, 6, 6), eyeMat), { position: new THREE.Vector3(x * s + 0.05 * s, 1.52 * s, -0.12 * s) }));
+            g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.012 * s, 6, 6), eyePupil), { position: new THREE.Vector3(x * s + 0.05 * s, 1.52 * s, -0.135 * s) }));
+        });
+        // Bracos estendidos (zombie)
+        [-0.28, 0.28].forEach((x, idx) => {
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.05 * s, 0.5 * s, 6), skinMat);
+            arm.position.set(x * s, 0.9 * s, -0.15 * s); arm.rotation.x = -0.8; g.add(arm);
+            const hand = new THREE.Mesh(new THREE.SphereGeometry(0.04 * s, 6, 6), skinMat);
+            hand.position.set(x * s, 0.6 * s, -0.35 * s); g.add(hand);
+        });
+        // Pernas mancando
+        [-0.12, 0.12].forEach((x, idx) => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.05 * s, 0.5 * s, 6), darkMat);
+            leg.position.set(x * s, 0.25 * s, 0); g.add(leg);
+        });
+    } else if (type.name === 'werewolf') {
+        // Corpo quadrupedal inclinado
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.35 * s, 0.3 * s, 0.6 * s), darkMat);
+        torso.position.set(0, 0.8 * s, 0); torso.rotation.x = 0.3; g.add(torso);
+        // Pernas traseiras
+        [-0.15, 0.15].forEach(x => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05 * s, 0.04 * s, 0.5 * s, 6), darkMat);
+            leg.position.set(x * s, 0.3 * s, 0.15 * s); g.add(leg);
+            const paw = new THREE.Mesh(new THREE.BoxGeometry(0.08 * s, 0.04 * s, 0.1 * s), darkMat);
+            paw.position.set(x * s, 0.05 * s, 0.15 * s); g.add(paw);
+        });
+        // Pernas dianteiras
+        [-0.15, 0.15].forEach(x => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.05 * s, 0.45 * s, 6), darkMat);
+            leg.position.set(x * s, 0.35 * s, -0.2 * s); g.add(leg);
+            const claw = new THREE.Mesh(new THREE.BoxGeometry(0.07 * s, 0.03 * s, 0.08 * s), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            claw.position.set(x * s, 0.05 * s, -0.25 * s); g.add(claw);
+        });
+        // Cabeca de lobo
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.2 * s, 0.18 * s, 0.25 * s), darkMat);
+        head.position.set(0, 1.0 * s, -0.4 * s); g.add(head);
+        // Focinho
+        const snout = new THREE.Mesh(new THREE.BoxGeometry(0.1 * s, 0.08 * s, 0.15 * s), skinMat);
+        snout.position.set(0, 0.95 * s, -0.55 * s); g.add(snout);
+        // Olhos vermelhos
+        [-0.05, 0.05].forEach(x => {
+            g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.02 * s, 6, 6), eyeMat), { position: new THREE.Vector3(x * s, 1.05 * s, -0.5 * s) }));
+        });
+        // Presas
+        const fangMat = new THREE.MeshStandardMaterial({ color: 0xffffcc });
+        [-0.025, 0.025].forEach(x => {
+            const fang = new THREE.Mesh(new THREE.ConeGeometry(0.008 * s, 0.06 * s, 4), fangMat);
+            fang.position.set(x * s, 0.88 * s, -0.58 * s); g.add(fang);
+        });
+        // Cauda
+        const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02 * s, 0.015 * s, 0.3 * s, 6), darkMat);
+        tail.position.set(0, 1.0 * s, 0.45 * s); tail.rotation.x = -0.5; g.add(tail);
+    } else if (type.name === 'demon') {
+        // Corpo grande e imponente
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5 * s, 0.7 * s, 0.3 * s), darkMat);
+        torso.position.y = 1.1 * s; g.add(torso);
+        // Cabeca com chifres
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.16 * s, 8, 8), skinMat);
+        head.position.y = 1.7 * s; g.add(head);
+        // Chifres grandes
+        const hornMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.3 });
+        [-0.12, 0.12].forEach(x => {
+            const horn = new THREE.Mesh(new THREE.ConeGeometry(0.03 * s, 0.2 * s, 6), hornMat);
+            horn.position.set(x * s, 1.9 * s, 0); horn.rotation.z = x > 0 ? -0.3 : 0.3; g.add(horn);
+        });
+        // Olhos vermelhos brilhantes
+        [-0.05, 0.05].forEach(x => {
+            g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.03 * s, 6, 6), eyeMat), { position: new THREE.Vector3(x * s, 1.73 * s, -0.14 * s) }));
+        });
+        // Bracos grossos com garras
+        [-0.32, 0.32].forEach(x => {
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.07 * s, 0.5 * s, 6), skinMat);
+            arm.position.set(x * s, 1.0 * s, 0); g.add(arm);
+            const clawMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            for (let c = 0; c < 3; c++) {
+                const claw = new THREE.Mesh(new THREE.ConeGeometry(0.015 * s, 0.1 * s, 4), clawMat);
+                claw.position.set(x * s + (c - 1) * 0.03 * s, 0.7 * s, -0.05 * s); claw.rotation.x = 0.5; g.add(claw);
+            }
+        });
+        // Pernas
+        [-0.15, 0.15].forEach(x => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08 * s, 0.06 * s, 0.5 * s, 6), darkMat);
+            leg.position.set(x * s, 0.25 * s, 0); g.add(leg);
+        });
+        // Cauda de demonio
+        const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * s, 0.01 * s, 0.5 * s, 6), skinMat);
+        tail.position.set(0, 0.8 * s, 0.4 * s); tail.rotation.x = -0.8; g.add(tail);
+        // Fogo nos olhos (luz vermelha)
+        const demonLight = new THREE.PointLight(0xff0000, 0.5, 3);
+        demonLight.position.set(0, 1.7 * s, -0.2 * s); g.add(demonLight);
+    } else if (type.name === 'ghost') {
+        // Corpo etereo e transparente
+        const ghostMat = new THREE.MeshStandardMaterial({ color: type.skin, transparent: true, opacity: 0.5, roughness: 0.3 });
+        // Corpo principal (cone invertido)
+        const body = new THREE.Mesh(new THREE.ConeGeometry(0.25 * s, 0.8 * s, 8, 1, true), ghostMat);
+        body.position.y = 1.0 * s; body.rotation.x = Math.PI; g.add(body);
+        // Cabeca
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.15 * s, 8, 8), ghostMat);
+        head.position.y = 1.5 * s; g.add(head);
+        // Olhos vazios brilhantes
+        [-0.05, 0.05].forEach(x => {
+            const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03 * s, 6, 6), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+            eye.position.set(x * s, 1.52 * s, -0.13 * s); g.add(eye);
+            const glow = new THREE.Mesh(new THREE.SphereGeometry(0.04 * s, 6, 6), eyeMat);
+            glow.position.set(x * s, 1.52 * s, -0.14 * s); g.add(glow);
+        });
+        // Bracos etereos
+        [-0.2, 0.2].forEach(x => {
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * s, 0.02 * s, 0.4 * s, 6), ghostMat);
+            arm.position.set(x * s, 0.9 * s, -0.1 * s); arm.rotation.x = -0.5; g.add(arm);
+        });
+        // Aura fantasma
+        const ghostLight = new THREE.PointLight(0x4444ff, 0.4, 4);
+        ghostLight.position.y = 1.2 * s; g.add(ghostLight);
+    }
+
+    g.userData = { type: type.name, health: type.health, maxHealth: type.health, speed: type.speed, damage: type.damage, shootRate: type.shootRate, lastShot: 0, alive: true, scale: type.scale, color: type.color, walkPhase: Math.random() * Math.PI * 2, stagger: 0, monster: true, flying: type.flying || false };
     return g;
 }
 
@@ -1718,11 +1911,35 @@ function animate() {
             else if (dist > 20) enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
         } else if (t === 'boss') {
             if (dist > 4) enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
+        } else if (t === 'zombie') {
+            // Zombie: lento, constante, sempre avanca
+            enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
+        } else if (t === 'werewolf') {
+            // Werewolf: rapido, corre em circulos, salta para atacar
+            const perp = new THREE.Vector3(-dir.z, 0, dir.x);
+            if (dist > 3) {
+                enemy.position.add(dir.multiplyScalar(enemy.userData.speed * 1.2));
+                enemy.position.add(perp.multiplyScalar(Math.sin(time * 0.006) * 0.08));
+            } else {
+                // Salto de ataque
+                enemy.position.add(dir.multiplyScalar(enemy.userData.speed * 2));
+                enemy.position.y = Math.abs(Math.sin(time * 0.01)) * 0.5;
+            }
+        } else if (t === 'demon') {
+            // Demon: medio, lança projeteis de fogo
+            if (dist > 6) enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
+        } else if (t === 'ghost') {
+            // Ghost: flutua,move-se erraticamente, atravesa paredes
+            const hover = Math.sin(time * 0.003) * 0.3;
+            enemy.position.y = 1.5 + hover;
+            const erratic = new THREE.Vector3(Math.sin(time * 0.005) * 0.05, 0, Math.cos(time * 0.007) * 0.05);
+            enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
+            enemy.position.add(erratic);
         } else {
             enemy.position.add(dir.multiplyScalar(enemy.userData.speed));
         }
 
-        enemy.position.y = 0;
+        enemy.position.y = enemy.userData.flying ? enemy.position.y : 0;
         const lookTarget = playerPos.clone(); lookTarget.y = 1.2 * s; enemy.lookAt(lookTarget);
 
         enemy.userData.walkPhase += delta * (t === 'scout' ? 12 : t === 'heavy' ? 5 : 8);
@@ -1770,7 +1987,7 @@ function respawnEnemies() {
             scene.add(e);
             const a = Math.random() * Math.PI * 2;
             const r = 15 + Math.random() * 20;
-            e.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+            e.position.set(Math.cos(a) * r, e.userData.flying ? 1.5 : 0, Math.sin(a) * r);
         }
     });
 }

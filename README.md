@@ -15,6 +15,8 @@ Jogo de tiro em primeira pessoa (FPS) com suporte a realidade virtual, otimizado
 - **Luz verde removida**: PointLight(0x00ff88) removida da arma
 - **VR weapon switch**: Botao A/X no controller esquerdo troca entre armas
 - **Muzzle flash dinamico**: Usa matrix do controller (VR) ou camera (desktop)
+- **Novos monstros**: Zumbi, Lobisomem, Demo e Fantasma com habilidades unicas
+- **Sons de monstros**: Sons ambientais aleatorios e sons de morte para cada tipo
 
 ### v1.0.0 (2026-07-08)
 - Release inicial
@@ -423,13 +425,24 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 
 ## 9. Inimigos
 
+### Soldados Humanos
+
 | Tipo | Vida | Velocidade | Dano | Cadencia | Escala |
 |---|---|---|---|---|---|
 | Soldado | 100 | 0.02 | 8 | 2.0s | 1.0 |
-| Scout | 60 | 0.05 | 5 | 1.5s | 0.9 |
-| Heavy | 250 | 0.01 | 15 | 3.0s | 1.3 |
-| Sniper | 80 | 0.015 | 20 | 2.5s | 1.0 |
-| Boss | 600 | 0.012 | 25 | 1.8s | 1.5 |
+| Batedor | 60 | 0.05 | 5 | 1.5s | 0.9 |
+| Pesado | 250 | 0.01 | 15 | 3.0s | 1.3 |
+| Francotirador | 80 | 0.015 | 20 | 2.5s | 1.0 |
+| Chefe | 600 | 0.012 | 25 | 1.8s | 1.5 |
+
+### Monstros
+
+| Tipo | Vida | Velocidade | Dano | Cadencia | Escala | Habilidade |
+|---|---|---|---|---|---|---|
+| **Zumbi** | 120 | 0.015 | 12 | - | 1.1 | Sempre avanca, bracos estendidos |
+| **Lobisomem** | 150 | 0.045 | 18 | - | 1.2 | Rapido, corre em circulos, salta |
+| **Demo** | 300 | 0.02 | 22 | 2.0s | 1.4 | Projeteis de fogo, chifres |
+| **Fantasma** | 80 | 0.03 | 10 | 1.5s | 1.0 | Flutua, movimento erratico |
 
 ### Comportamento
 
@@ -438,6 +451,7 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 - Morrem com animacao de particulas
 - Drop de vida (20% chance, +20 HP) e municao (30% chance, +5 balas)
 - Total: 12 inimigos por rodada
+- Sons aleatorios de monstros no ambiente
 
 ---
 
@@ -506,6 +520,8 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 | Luz verde removida | PointLight(0x00ff88) removida da arma |
 | VR weapon switch | Botao A/X no controller esquerdo troca armas |
 | Flash dinamico | Usa matrix correta (controller VR / camera desktop) |
+| Monstros | 4 novos tipos: Zumbi, Lobisomem, Demo, Fantasma |
+| Sons monstros | Sons ambientais e de morte para cada tipo de monstro |
 
 ### v1.0.0
 
