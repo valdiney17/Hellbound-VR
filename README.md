@@ -84,11 +84,6 @@ certs/
 └── key.pem     # Chave privada RSA 2048-bit
 ```
 
-O certificado inclui SAN para:
-- `localhost`
-- `127.0.0.1`
-- `192.168.5.54`
-
 Para regenerar:
 
 ```bash
@@ -111,7 +106,7 @@ Saida esperada no terminal:
   SERVIDOR HTTPS RODANDO!
 
   Local:  https://localhost:8443/fps
-  LAN:    https://192.168.5.54:8443/fps
+  LAN:    https://<SEU_IP>:8443/fps
 
   Abra no Quest Browser!
 ==========================================
@@ -120,18 +115,83 @@ HTTP redirecionando para HTTPS na porta 8080
 
 ### 2.7 Acessar no Quest 2
 
-1. Abrir **Meta Quest Browser**
-2. Digitar: `https://192.168.5.54:8443/fps`
-3. Aceitar certificado:
-   - Clicar em **Advanced**
-   - Clicar em **Proceed to 192.168.5.54 (unsafe)**
-4. Clicar em **"ENTRAR EM VR"**
-5. Aceitar permissao "Allow VR" no Quest
+1. Descubra o IP do seu PC:
+   - Windows: `ipconfig` no CMD → procurar "IPv4 Address"
+   - Formato: algo como `192.168.x.x` ou `10.0.x.x`
+2. Abrir **Meta Quest Browser**
+3. Digitar: `https://<SEU_IP>:8443/fps`
+4. Aceitar certificado (veja Secao 2.9 abaixo)
+5. Clicar em **"ENTRAR EM VR"**
+6. Aceitar permissao "Allow VR" no Quest
 
 ### 2.8 Acessar no Desktop
 
 ```
 http://localhost/fps
+```
+
+### 2.9 Como Instalar o Certificado SSL no Quest 2
+
+O navegador Quest **nao aceita certificados auto-assinados automaticamente**. Siga estes passos:
+
+#### Opcao A: Aceitar temporariamente (mais rapido)
+
+1. No Quest Browser, apos digitar a URL HTTPS, vai aparecer um aviso de seguranca
+2. Clicar em **"Advanced"**
+3. Clicar em **"Proceed to \<seu-ip\> (unsafe)"**
+4. Pronto! O jogo vai carregar
+
+> **Nota**: Esse aceite e por sessao. Ao fechar e reabrir o browser, tera que aceitar novamente.
+
+#### Opcao B: Instalar certificado permanentemente (recomendado)
+
+1. No PC, abra o navegador e acesse: `https://<seu-ip>:8443/fps`
+2. Aceite o certificado como na Opcao A
+3. No PC, abra `chrome://settings/certificates` (Chrome) ou `edge://settings/certificates` (Edge)
+4. Va em **Authorities** (Autoridades) ou **Intermediate Certificate Authorities**
+5. Clique **Import** e selecione o arquivo `certs/cert.pem` do projeto
+6. Marque como **Trusted for websites**
+7. Agora instale o certificado no Quest:
+   - Copie o arquivo `cert.pem` para o Quest via USB ou pasta compartilhada
+   - No Quest Browser, va em `chrome://settings/certificates`
+   - Importe o `cert.pem` como autoridade confiavel
+8. Apos instalar, o browser vai aceitar o certificado automaticamente
+
+#### Opcao C: Usarmkcert (ferramenta externa, melhor opcao)
+
+```bash
+# Instalar mkcert (Windows)
+choco install mkcert
+
+# Criar certificado local confiavel
+mkcert -install
+mkcert -key-file key.pem -cert-file cert.pem localhost 127.0.0.1
+
+# Copiar para o diretorio certs/
+copy key.pem certs\
+copy cert.pem certs\
+```
+
+Depois instale o certificado no Quest (mesmo processo da Opcao B).
+
+#### Certificado para outros IPs
+
+Para incluir o IP da sua rede local, edite `https-server.js` na secao `altNames`:
+
+```javascript
+{ name: 'subjectAltName', altNames: [
+    { type: 2, value: 'localhost' },         // hostname
+    { type: 7, ip: '127.0.0.1' },            // loopback
+    { type: 7, ip: '<SEU_IP>' },             // IP da sua rede
+]}
+```
+
+Depois delete os certificados antigos e reinicie o servidor:
+
+```bash
+del certs\cert.pem
+del certs\key.pem
+node https-server.js
 ```
 
 ---
@@ -140,12 +200,12 @@ http://localhost/fps
 
 | URL | Servidor | Porta | Protocolo | Uso |
 |---|---|---|---|---|
-| `http://192.168.5.54/fps` | XAMPP | 80 | HTTP | Desktop (LAN) |
 | `http://localhost/fps` | XAMPP | 80 | HTTP | Desktop (local) |
-| `https://192.168.5.54:8443/fps` | Node.js | 8443 | HTTPS | **VR (obrigatorio)** |
+| `http://<SEU_IP>/fps` | XAMPP | 80 | HTTP | Desktop (LAN) |
 | `https://localhost:8443/fps` | Node.js | 8443 | HTTPS | VR (local) |
+| `https://<SEU_IP>:8443/fps` | Node.js | 8443 | HTTPS | **VR (obrigatorio)** |
 
-**IMPORTANTE**: O Quest 2 so funciona com **HTTPS** para WebXR immersive-vr.
+**IMPORTANTE**: O Quest 2 so funciona com **HTTPS** para WebXR immersive-vr. Substitua `<SEU_IP>` pelo IP do seu PC (use `ipconfig` no CMD para descobrir).
 
 ---
 

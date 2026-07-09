@@ -3,6 +3,23 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
+const os = require('os');
+
+// Detectar IP da rede local automaticamente
+function getLocalIP() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return '127.0.0.1';
+}
+
+const LOCAL_IP = getLocalIP();
+console.log('IP da rede local:', LOCAL_IP);
 
 const ROOT = __dirname;
 const HTTPS_PORT = 8443;
@@ -68,7 +85,7 @@ if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
         { name: 'subjectAltName', altNames: [
             { type: 2, value: 'localhost' },
             { type: 7, ip: '127.0.0.1' },
-            { type: 7, ip: '192.168.5.54' }
+            { type: 7, ip: LOCAL_IP }
         ]}
     ]);
 
@@ -87,7 +104,7 @@ https.createServer(options, handler).listen(HTTPS_PORT, '0.0.0.0', () => {
     console.log('  SERVIDOR HTTPS RODANDO!');
     console.log('');
     console.log('  Local:  https://localhost:' + HTTPS_PORT + '/fps');
-    console.log('  LAN:    https://192.168.5.54:' + HTTPS_PORT + '/fps');
+    console.log('  LAN:    https://' + LOCAL_IP + ':' + HTTPS_PORT + '/fps');
     console.log('');
     console.log('  Abra no Quest Browser!');
     console.log('==========================================');
