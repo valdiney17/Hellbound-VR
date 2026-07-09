@@ -487,10 +487,12 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 
 ### Movimento VR
 
-- Polling direto de `session.inputSources[].gamepad.axes`
-- Deadzone: 0.15
-- Velocidade: 3.5 m/s
-- Direcao: baseada em `camera.getWorldDirection()` com fallback
+- **Room-scale**: Movimento fisico (andar pela sala)
+- **Tracking**: WebXR local-floor reference space
+- **Sem analogico**: Thumbstick NAO move o jogador
+- **Deadzone**: 0.15 (para deteccao de movimento)
+- **Velocidade**: 3.5 m/s (apenas para desktop)
+- **Direcao**: baseada em `camera.getWorldDirection()` com fallback
 
 ### Otimizacoes VR
 
@@ -592,7 +594,7 @@ Tiro → weaponModel.position.z -= 0.03 (kick para frente)
 | Acao | Controller | Botao |
 |---|---|---|
 | Olhar | Tracking de cabeca | - |
-| Andar | Esquerdo | Thumbstick |
+| Andar | **Fisico** | Andar pela sala |
 | Atirar/Cortar | Direito | Trigger |
 | Recarregar | Direito | Grip |
 | Trocar arma | Esquerdo | A/X (index 3) |
