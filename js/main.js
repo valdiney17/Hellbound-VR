@@ -35,6 +35,10 @@ let guns = {};
 let currentGun = null;
 let audioCtx = null;
 let pistolBuffer = null;
+let smgFireBuffer = null;
+let smgEndBuffer = null;
+let smgReloadBuffer = null;
+let smgFireSource = null;
 let campfires = [];
 let weaponModel = null;
 let shotgunModel = null;
@@ -572,6 +576,22 @@ function ensureAudio() {
         .then(buf => audioCtx.decodeAudioData(buf))
         .then(decoded => { pistolBuffer = decoded; console.log('Pistol .m4a loaded OK, duration:', decoded.duration.toFixed(2), 's'); })
         .catch(e => console.warn('Pistol .m4a decode failed, using procedural sound:', e.message));
+    // Carregar sons da SMG
+    fetch('assets/audio/arma/smg/smg tiro continuo.mp3')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => { smgFireBuffer = decoded; console.log('SMG fire loaded OK'); })
+        .catch(e => console.warn('SMG fire load failed:', e.message));
+    fetch('assets/audio/arma/smg/smg tiro fim.mp3')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => { smgEndBuffer = decoded; console.log('SMG end loaded OK'); })
+        .catch(e => console.warn('SMG end load failed:', e.message));
+    fetch('assets/audio/arma/smg/smg recarregando.mp3')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => { smgReloadBuffer = decoded; console.log('SMG reload loaded OK'); })
+        .catch(e => console.warn('SMG reload load failed:', e.message));
     // Musica do menu
     startMenuMusic();
 }
@@ -718,7 +738,20 @@ function playSound(type) {
                 playGunshot(800, 0.08, 0.25);
             }
             break;
-        case 'smg': playGunshot(1200, 0.05, 0.15); break;
+        case 'smg':
+            if (smgFireBuffer) {
+                if (smgFireSource) try { smgFireSource.stop(); } catch(e) {}
+                smgFireSource = audioCtx.createBufferSource();
+                smgFireSource.buffer = smgFireBuffer;
+                smgFireSource.loop = true;
+                const g = audioCtx.createGain();
+                g.gain.value = 0.4;
+                smgFireSource.connect(g).connect(audioCtx.destination);
+                smgFireSource.start();
+            } else {
+                playGunshot(1200, 0.05, 0.15);
+            }
+            break;
         case 'shotgun': playGunshot(300, 0.15, 0.4); break;
         case 'sniper': playGunshot(150, 0.2, 0.5); break;
         case 'hit': playHitSound(); break;
@@ -1607,7 +1640,22 @@ function spawnParticles(pos, color, count) {
 function reload() {
     if (isReloading || weaponAmmo[currentWeapon] === WEAPONS[currentWeapon].maxAmmo) return;
     isReloading = true;
-    playSound('reload');
+    // Parar som de tiro SMG antes de recarregar
+    if (smgFireSource) {
+        try { smgFireSource.stop(); } catch(e) {}
+        smgFireSource = null;
+    }
+    // Tocar som de recarga da SMG ou som generico
+    if (currentWeapon === 'smg' && smgReloadBuffer && audioCtx) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = smgReloadBuffer;
+        const g = audioCtx.createGain();
+        g.gain.value = 0.4;
+        src.connect(g).connect(audioCtx.destination);
+        src.start();
+    } else {
+        playSound('reload');
+    }
     const bar = document.getElementById('reload-bar-fill');
     bar.style.width = '0%';
     document.getElementById('reload-bar').style.display = 'block';
@@ -1878,6 +1926,33 @@ function animate() {
     // Auto-fire: se gatilho VR segurado, dispara continuamente (fire rate controlado dentro de shoot)
     if (isVR && vrTriggerHeld) {
         shoot();
+    }
+
+    // Parar som de tiro SMG quando soltar gatilho ou acabar balas
+    if (isVR && !vrTriggerHeld && smgFireSource) {
+        try { smgFireSource.stop(); } catch(e) {}
+        smgFireSource = null;
+        if (smgEndBuffer && audioCtx) {
+            const src = audioCtx.createBufferSource();
+            src.buffer = smgEndBuffer;
+            const g = audioCtx.createGain();
+            g.gain.value = 0.3;
+            src.connect(g).connect(audioCtx.destination);
+            src.start();
+        }
+    }
+    // Parar som se acabou municao
+    if (isVR && smgFireSource && weaponAmmo[currentWeapon] <= 0) {
+        try { smgFireSource.stop(); } catch(e) {}
+        smgFireSource = null;
+        if (smgEndBuffer && audioCtx) {
+            const src = audioCtx.createBufferSource();
+            src.buffer = smgEndBuffer;
+            const g = audioCtx.createGain();
+            g.gain.value = 0.3;
+            src.connect(g).connect(audioCtx.destination);
+            src.start();
+        }
     }
 
     isWalking = moveForward || moveBackward || moveLeft || moveRight;
