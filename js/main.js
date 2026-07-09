@@ -282,8 +282,8 @@ function loadShotgunModel() {
                 const center = scaledBox.getCenter(new THREE.Vector3());
                 model.position.set(-center.x, -center.y, -center.z);
 
-                // Rotacao: cano para frente (-Z)
-                model.rotation.set(0, -Math.PI / 2, 0);
+                // Shotgun: cano para frente (-Z)
+                model.rotation.set(0, Math.PI / 2, 0);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
@@ -329,7 +329,8 @@ function loadSMGModel() {
                 const center = scaledBox.getCenter(new THREE.Vector3());
                 model.position.set(-center.x, -center.y, -center.z);
 
-                model.rotation.set(0, -Math.PI / 2, 0);
+                // SMG: cano para frente (-Z)
+                model.rotation.set(0, Math.PI / 2, 0);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
@@ -375,7 +376,8 @@ function loadKnifeModel() {
                 const center = scaledBox.getCenter(new THREE.Vector3());
                 model.position.set(-center.x, -center.y, -center.z);
 
-                model.rotation.set(0, Math.PI, 0);
+                // Faca: ponta para cima (+Y), cabo na mao
+                model.rotation.set(0, Math.PI, -Math.PI / 2);
                 model.position.set(0, 0, 0);
 
                 model.traverse(child => {
