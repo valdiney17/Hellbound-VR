@@ -12,6 +12,10 @@ package-lock.json
 *.glb
 *.zip
 *.usdz
-# Large model files
+*.fbx
+*.obj
+assets/audio/arma/Shotgun/
+assets/audio/arma/smg/
+assets/audio/arma/faca/
 assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Tree1.obj
-assets/cenario/maos/uploads_files_3670422_handbynadevaynoskix(1).obj
+assets/cenario/maos/
