@@ -1,0 +1,14 @@
+node_modules/
+certs/
+package-lock.json
+*.log
+*.blend
+*.blend1
+*.mp4
+*.rar
+*.3ds
+*.x3d
+*.ply
+# Large model files
+assets/cenario/arvore/1f9jtr180dxk-Tree1ByTyroSmith/Tree1/Tree1.obj
+assets/cenario/maos/uploads_files_3670422_handbynadevaynoskix(1).obj

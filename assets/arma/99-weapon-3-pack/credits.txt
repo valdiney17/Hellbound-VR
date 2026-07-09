@@ -1,0 +1,3 @@
+glock texture + reference = The national interest(Google images)
+pistol texture + reference = Pinterest (Google images) 
+revolver texture + reference = Fallout wiki - Fandom(Google images)

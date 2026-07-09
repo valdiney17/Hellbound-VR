@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floresta Sombria - FPS VR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="blocker">
+        <div id="menu-fog"></div>
+        <div id="menu-particles"></div>
+        <div id="menu-vignette"></div>
+
+        <div id="instructions">
+            <div id="title-wrapper">
+                <h1 id="game-title">FLORESTA SOMBRIA</h1>
+                <div id="title-blood"></div>
+            </div>
+            <p id="blocker-text">Eles estao entre as arvores.<br><span id="text-flicker">Voce nao esta sozinho.</span></p>
+            <p id="vr-info" style="color:#00ff88;display:none;font-size:1.1em;">Quest 2 Detectado!</p>
+            <p id="no-vr-info" style="color:#888;display:none;">Modo Desktop</p>
+            <p id="blocker-subtitle" style="color:#667766;margin-top:10px;">Carregando...</p>
+            <button id="blocker-btn">INICIAR</button>
+            <div id="controls-hint">
+                <div class="hint-row">
+                    <span class="hint-icon">&#9781;</span>
+                    <span>VR: Trigger=Gatilho | Grip=Recarregar | Stick=Andar</span>
+                </div>
+                <div class="hint-row">
+                    <span class="hint-icon">&#9000;</span>
+                    <span>Desktop: WASD+Mouse | Espaco=Atirar | R=Recarregar</span>
+                </div>
+            </div>
+            <div id="warning-text">&#9888; Este jogo contem cenas de terror e violencia</div>
+        </div>
+
+        <div id="menu-blood-drips">
+            <div class="drip" style="left:10%;animation-delay:0s;"></div>
+            <div class="drip" style="left:25%;animation-delay:1.2s;"></div>
+            <div class="drip" style="left:45%;animation-delay:0.5s;"></div>
+            <div class="drip" style="left:60%;animation-delay:2.1s;"></div>
+            <div class="drip" style="left:78%;animation-delay:0.8s;"></div>
+            <div class="drip" style="left:92%;animation-delay:1.7s;"></div>
+        </div>
+    </div>
+
+    <div id="damage-overlay"></div>
+
+    <div id="hud">
+        <div id="health-bar">
+            <div id="health-fill"></div>
+            <span id="health-text">100</span>
+        </div>
+
+        <div id="weapon-info">
+            <div id="weapon-name">Pistola</div>
+            <div id="ammo">12 / 12</div>
+            <div id="reload-bar"><div id="reload-bar-fill"></div></div>
+        </div>
+
+        <div id="crosshair">
+            <div class="cross-h"></div>
+            <div class="cross-v"></div>
+            <div class="cross-dot"></div>
+        </div>
+
+        <div id="score-display">
+            <div id="score">0</div>
+            <div id="combo"></div>
+        </div>
+
+        <div id="weapon-slots">
+            <div class="weapon-slot active" data-weapon="pistol">1 - Pistola</div>
+            <div class="weapon-slot" data-weapon="smg">2 - SMG</div>
+            <div class="weapon-slot" data-weapon="shotgun">3 - Shotgun</div>
+            <div class="weapon-slot" data-weapon="sniper">4 - Sniper</div>
+        </div>
+
+        <div id="stats">
+            <div id="enemy-count">Vivos: <span id="enemy-total">12</span></div>
+            <div id="kill-count">Abates: <span id="kills">0</span></div>
+        </div>
+
+        <div id="kill-feed"></div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
