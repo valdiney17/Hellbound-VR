@@ -2,11 +2,17 @@
 
 Jogo de tiro em primeira pessoa (FPS) com suporte a realidade virtual, otimizado para Meta Quest 2 via browser. Tema de terror com menu atmosferico, musica dinamica e gameplay completa.
 
-**Versao atual: v1.0.1**
+**Versao atual: v1.0.2**
 
 ---
 
 ## Changelog
+
+### v1.0.2 (2026-07-09)
+- **4 novos monstros**: Zumbi, Lobisomem, Demo e Fantasma
+- **Habilidades unicas**: Lobisomem salta, Demo lança fogo, Fantasma flutua
+- **Sons ambientais**: Rugidos aleatorios dos monstros na floresta
+- **24 inimigos total**: 12 soldados + 12 monstros
 
 ### v1.0.1 (2026-07-09)
 - **Nova arma: Faca** (corpo a corpo, dano 50, alcance 2m, municao infinita)
@@ -15,8 +21,6 @@ Jogo de tiro em primeira pessoa (FPS) com suporte a realidade virtual, otimizado
 - **Luz verde removida**: PointLight(0x00ff88) removida da arma
 - **VR weapon switch**: Botao A/X no controller esquerdo troca entre armas
 - **Muzzle flash dinamico**: Usa matrix do controller (VR) ou camera (desktop)
-- **Novos monstros**: Zumbi, Lobisomem, Demo e Fantasma com habilidades unicas
-- **Sons de monstros**: Sons ambientais aleatorios e sons de morte para cada tipo
 
 ### v1.0.0 (2026-07-08)
 - Release inicial
