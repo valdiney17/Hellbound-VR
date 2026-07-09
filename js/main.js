@@ -1404,6 +1404,25 @@ function shoot() {
     updateAmmoDisplay();
     playSound(currentWeapon);
 
+    // Vibracao do controller direito (recoil haptico)
+    if (isVR && controller2) {
+        try {
+            const session = renderer.xr.getSession();
+            if (session) {
+                const sources = session.inputSources;
+                for (let i = 0; i < sources.length; i++) {
+                    const src = sources[i];
+                    if (src.handedness === 'right' && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators.length > 0) {
+                        const intensity = w.melee ? 0.6 : 0.4;
+                        const duration = w.melee ? 150 : 80;
+                        src.gamepad.hapticActuators[0].pulse(intensity, duration);
+                        break;
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
     // ANIMAÇÃO DA FACA - swing na VR
     if (w.melee && isVR && weaponModel) {
         const origRot = weaponModel.rotation.x;
