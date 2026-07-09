@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, scene, renderer, controller1, controller2, controllerGrip1, controllerGrip2;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -36,6 +37,7 @@ let audioCtx = null;
 let pistolBuffer = null;
 let campfires = [];
 let weaponModel = null;
+let shotgunModel = null;
 
 init();
 
@@ -96,6 +98,7 @@ function init() {
 
     try {
         loadWeaponModel();
+        loadShotgunModel();
     } catch (e) {
         console.error('Weapons error:', e);
     }
@@ -253,6 +256,52 @@ function loadWeaponModel() {
     }
 }
 
+function loadShotgunModel() {
+    try {
+        const loader = new GLTFLoader();
+        loader.load(
+            'assets/audio/arma/Shotgun/benelli_m4.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                shotgunModel = model;
+
+                const bbox = new THREE.Box3().setFromObject(model);
+                const size = bbox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+
+                // Shotgun real ~= 0.7m
+                const targetSize = 0.50;
+                const scaleFactor = targetSize / maxDim;
+                model.scale.setScalar(scaleFactor);
+
+                const scaledBox = new THREE.Box3().setFromObject(model);
+                const center = scaledBox.getCenter(new THREE.Vector3());
+                model.position.set(-center.x, -center.y, -center.z);
+
+                model.rotation.set(0, Math.PI, 0);
+                model.position.set(0, 0, 0);
+
+                model.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                controller2.add(model);
+                model.visible = false;
+                console.log('Shotgun GLB loaded! Scale:', scaleFactor);
+            },
+            undefined,
+            (err) => {
+                console.log('Shotgun GLB load error:', err);
+            }
+        );
+    } catch (e) {
+        console.log('GLTFLoader error:', e);
+    }
+}
+
 // ==================== LEFT HAND (procedural, real size) ====================
 function loadLeftHand() {
     const handGroup = new THREE.Group();
@@ -381,6 +430,17 @@ function switchWeapon(name) {
     isReloading = false;
     updateAmmoDisplay();
     document.querySelectorAll('.weapon-slot').forEach(el => el.classList.toggle('active', el.dataset.weapon === name));
+
+    // Trocar modelo 3D no VR
+    if (isVR) {
+        if (name === 'shotgun' && shotgunModel) {
+            if (weaponModel) weaponModel.visible = false;
+            shotgunModel.visible = true;
+        } else if (weaponModel) {
+            shotgunModel.visible = false;
+            weaponModel.visible = true;
+        }
+    }
 }
 
 // ==================== AUDIO ====================
@@ -1742,11 +1802,18 @@ function animate() {
         } else { footstepTimer = 0.3; }
     }
 
-    // ARMA NO CONTROLLER DIREITO (VR) - agora weaponModel está diretamente no controller2
-    if (isVR && weaponModel) {
-        weaponModel.visible = true;
+    // ARMA NO CONTROLLER DIREITO (VR)
+    if (isVR) {
         // Esconder fallback guns em VR
         Object.values(guns).forEach(g => { g.visible = false; });
+        // Mostrar modelo correto baseado na arma selecionada
+        if (currentWeapon === 'shotgun' && shotgunModel) {
+            if (weaponModel) weaponModel.visible = false;
+            shotgunModel.visible = true;
+        } else if (weaponModel) {
+            if (shotgunModel) shotgunModel.visible = false;
+            weaponModel.visible = true;
+        }
         // Esconder laser pointers
         if (controller1) controller1.children.forEach(c => { if (c.isLine) c.visible = false; });
         if (controller2) controller2.children.forEach(c => { if (c.isLine) c.visible = false; });
